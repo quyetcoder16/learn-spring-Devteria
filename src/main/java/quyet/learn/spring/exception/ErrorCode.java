@@ -4,8 +4,9 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999,"Uncategorized Exception error!"),
     INVALID_KEY(1001,"Invalid message key!"),
     USER_EXISTED(1002, "User Existed!"),
-    USERNAME_INVALID(1003, "Username Must be at least 3 characters!"),
-    INVALID_PASSWORD(1004, "Password Must be at least 6 characters!"),
+    USER_NOT_EXISTED(1003, "User Not Existed!"),
+    USERNAME_INVALID(1004, "Username Must be at least 3 characters!"),
+    INVALID_PASSWORD(1005, "Password Must be at least 6 characters!"),
     ;
     private int errorCode;
     private String errorMsg;
