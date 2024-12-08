@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
 import quyet.learn.spring.entity.Users;
+import quyet.learn.spring.exception.AppException;
+import quyet.learn.spring.exception.ErrorCode;
 import quyet.learn.spring.resporitory.UserRespository;
 import quyet.learn.spring.service.UserService;
 
@@ -20,7 +22,7 @@ public class UserServiceImpl implements UserService {
     public Users createUser(UserCreationRequest userRequest) {
         Users user = new Users();
         if(userRespository.existsByUsername(userRequest.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
         user.setUsername(userRequest.getUsername());
         user.setPassword(userRequest.getPassword());
