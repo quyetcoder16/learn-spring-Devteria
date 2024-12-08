@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
+import quyet.learn.spring.dto.response.ApiResponse;
 import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.service.UserService;
 
@@ -17,8 +18,10 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    Users createUser(@RequestBody @Valid UserCreationRequest request) {
-        return userService.createUser(request);
+    ApiResponse<Users> createUser(@RequestBody @Valid UserCreationRequest request) {
+        ApiResponse<Users> apiResponse = new ApiResponse<>();
+        apiResponse.setData(userService.createUser(request));
+        return apiResponse;
     }
 
 
