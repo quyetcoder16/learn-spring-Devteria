@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
 import quyet.learn.spring.dto.response.ApiResponse;
+import quyet.learn.spring.dto.response.UserResponse;
 import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.service.UserService;
 
@@ -31,12 +32,12 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    Users getUser(@PathVariable("userId") String userId) {
+    UserResponse getUser(@PathVariable("userId") String userId) {
         return userService.getUser(userId);
     }
 
     @PutMapping("/{userId}")
-    Users updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
+    UserResponse updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
         return userService.updateUser(userId, request);
     }
 

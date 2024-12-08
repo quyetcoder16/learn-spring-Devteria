@@ -4,9 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
+import quyet.learn.spring.dto.response.UserResponse;
 import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.exception.AppException;
 import quyet.learn.spring.exception.ErrorCode;
+import quyet.learn.spring.mapper.UserMapper;
 import quyet.learn.spring.resporitory.UserRespository;
 import quyet.learn.spring.service.UserService;
 
@@ -17,44 +19,41 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRespository userRespository;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public Users createUser(UserCreationRequest userRequest) {
-        Users user = new Users();
-        if(userRespository.existsByUsername(userRequest.getUsername())) {
+
+        if (userRespository.existsByUsername(userRequest.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        user.setUsername(userRequest.getUsername());
-        user.setPassword(userRequest.getPassword());
-        user.setDateOfBirth(userRequest.getDob());
-        user.setFirstName(userRequest.getFirstName());
-        user.setLastName(userRequest.getLastName());
+        Users user = userMapper.toUsers(userRequest);
+
 
         return userRespository.save(user);
 
     }
 
     @Override
-    public Users updateUser(String userId, UserUpdateRequest userUpdateRequest) {
-        Users user = getUser(userId);
-        user.setFirstName(userUpdateRequest.getFirstName());
-        user.setLastName(userUpdateRequest.getLastName());
-        user.setDateOfBirth(userUpdateRequest.getDob());
-        user.setPassword(userUpdateRequest.getPassword());
-        return userRespository.save(user);
+    public UserResponse updateUser(String userId, UserUpdateRequest userUpdateRequest) {
+        Users user = userRespository.findById(userId).orElseThrow(() -> {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        });
+        userMapper.updateUsers(user, userUpdateRequest);
+        return userMapper.toUserResponse(userRespository.save(user));
     }
 
     @Override
-    public Users deleteUser(String userId) {
-        Users user = getUser(userId);
+    public void deleteUser(String userId) {
         userRespository.deleteById(userId);
-        return user;
     }
 
+
     @Override
-    public Users getUser(String userId) {
-        return userRespository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found"));
+    public UserResponse getUser(String userId) {
+        return userMapper.toUserResponse(userRespository.findById(userId).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)));
     }
 
     @Override
