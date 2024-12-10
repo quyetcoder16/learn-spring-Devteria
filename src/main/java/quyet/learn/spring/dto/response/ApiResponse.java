@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -16,5 +15,11 @@ public class ApiResponse<T> {
     private String message;
     private T data;
 
+    @Builder
+    public ApiResponse(int code, String message, T data) {
+        this.code = (code != 0) ? code : 1000;
+        this.message = message;
+        this.data = data;
+    }
 
 }
