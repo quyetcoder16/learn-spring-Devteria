@@ -15,10 +15,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import quyet.learn.spring.dto.request.auth.AuthenticationRequest;
 import quyet.learn.spring.dto.request.auth.IntrospectRequest;
 import quyet.learn.spring.dto.response.auth.AuthenticationResponse;
 import quyet.learn.spring.dto.response.auth.IntrospectResponse;
+import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.exception.AppException;
 import quyet.learn.spring.exception.ErrorCode;
 import quyet.learn.spring.resporitory.UserRespository;
@@ -28,6 +30,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 /**
  * AuthServiceImpl: Implementation của AuthService, chịu trách nhiệm xử lý xác thực và kiểm tra token JWT.
@@ -66,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Tạo token JWT sau khi xác thực thành công.
-        var token = gennerateToken(authenticationRequest.getUsername(), user.getId());
+        var token = gennerateToken(user);
 
         // Trả về phản hồi chứa token và trạng thái xác thực.
         return AuthenticationResponse.builder()
@@ -102,23 +105,23 @@ public class AuthServiceImpl implements AuthService {
     /**
      * Phương thức tạo token JWT.
      *
-     * @param username tên người dùng.
-     * @param userId   ID của người dùng.
+     * @param user nguoi dung.
      * @return chuỗi token JWT.
      */
-    private String gennerateToken(String username, String userId) {
+    private String gennerateToken(Users user) {
         // Tạo header của token với thuật toán HS256.
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
 
         // Tạo payload của token, bao gồm các claims.
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(username) // Đặt subject là username.
+                .subject(user.getUsername()) // Đặt subject là username.
                 .issuer("quyet.learn.spring") // Đặt issuer là hệ thống hiện tại.
                 .issueTime(new Date()) // Thời gian phát hành token.
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli() // Token hết hạn sau 1 giờ.
                 ))
-                .claim("userId", userId) // Thêm thông tin bổ sung userId.
+                .claim("userId", user.getId()) // Thêm thông tin bổ sung userId.
+                .claim("scope",buildScope(user))
                 .build();
 
         // Chuyển payload sang đối tượng JWSObject.
@@ -133,5 +136,15 @@ public class AuthServiceImpl implements AuthService {
             log.error("Can't create token", e); // Ghi log lỗi nếu xảy ra lỗi.
             throw new RuntimeException(e); // Ném RuntimeException.
         }
+    }
+
+    private String buildScope(Users user) {
+        StringJoiner scopeJoiner = new StringJoiner(" ");
+        if(!CollectionUtils.isEmpty(user.getRoles())) {
+            user.getRoles().forEach(role -> {
+                scopeJoiner.add(role);
+            });
+        }
+        return scopeJoiner.toString();
     }
 }
