@@ -15,5 +15,6 @@ public interface UserService {
     public void deleteUser(String userId);
     public UserResponse getUser(String userId);
     public List<UserResponse> getAllUsers();
+    public UserResponse getMyÌnfo();
 
 }
