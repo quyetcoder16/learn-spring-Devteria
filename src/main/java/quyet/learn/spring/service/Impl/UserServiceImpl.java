@@ -1,6 +1,8 @@
 package quyet.learn.spring.service.Impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
@@ -29,7 +31,8 @@ public class UserServiceImpl implements UserService {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
         Users user = userMapper.toUsers(userRequest);
-
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
         return userRespository.save(user);
 
