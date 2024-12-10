@@ -1,7 +1,10 @@
 package quyet.learn.spring.controller;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
@@ -14,21 +17,28 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@Slf4j
 public class UserController {
     @Autowired
     private UserService userService;
 
     @PostMapping
-    ApiResponse<Users> createUser(@RequestBody @Valid UserCreationRequest request) {
-        ApiResponse<Users> apiResponse = new ApiResponse<>();
-        apiResponse.setData(userService.createUser(request));
-        return apiResponse;
+    ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
+
+        return ApiResponse.<UserResponse>builder()
+                .data(userService.createUser(request))
+                .build();
     }
 
 
     @GetMapping
-    List<Users> getUsers() {
-        return userService.getAllUsers();
+    ApiResponse<List<UserResponse>> getUsers() {
+       var authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Username: {}", authentication.getName());
+        authentication.getAuthorities().forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
+        return ApiResponse.<List<UserResponse>>builder()
+                .data(userService.getAllUsers())
+                .build();
     }
 
     @GetMapping("/{userId}")

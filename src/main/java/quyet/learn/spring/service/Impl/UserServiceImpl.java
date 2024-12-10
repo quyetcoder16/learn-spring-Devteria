@@ -1,5 +1,8 @@
 package quyet.learn.spring.service.Impl;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -8,33 +11,42 @@ import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
 import quyet.learn.spring.dto.response.UserResponse;
 import quyet.learn.spring.entity.Users;
+import quyet.learn.spring.enums.Role;
 import quyet.learn.spring.exception.AppException;
 import quyet.learn.spring.exception.ErrorCode;
 import quyet.learn.spring.mapper.UserMapper;
 import quyet.learn.spring.resporitory.UserRespository;
 import quyet.learn.spring.service.UserService;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRespository userRespository;
-    @Autowired
-    private UserMapper userMapper;
+    UserRespository userRespository;
+    UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
 
     @Override
-    public Users createUser(UserCreationRequest userRequest) {
+    public UserResponse createUser(UserCreationRequest userRequest) {
 
         if (userRespository.existsByUsername(userRequest.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
+
         Users user = userMapper.toUsers(userRequest);
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
-        return userRespository.save(user);
+        HashSet<String> roles = new HashSet<>();
+        roles.add(Role.USER.name());
+        user.setRoles(roles);
+
+
+        return userMapper.toUserResponse(userRespository.save(user));
 
     }
 
@@ -60,7 +72,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Users> getAllUsers() {
-        return userRespository.findAll();
+    public List<UserResponse> getAllUsers() {
+        return userRespository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
 }
