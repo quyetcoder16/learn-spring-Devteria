@@ -122,8 +122,9 @@ public class UserServiceImpl implements UserService {
      *
      * @return Danh sách người dùng.
      */
-    @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương thức này.
+
     @Override
+    @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương thức này.
     public List<UserResponse> getAllUsers() {
         log.info("In method get Users"); // Ghi log khi vào phương thức.
         return userRespository.findAll().stream()

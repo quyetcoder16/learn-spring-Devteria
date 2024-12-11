@@ -1,8 +1,10 @@
 package quyet.learn.spring.exception;
 
 // Import các lớp và annotation cần thiết
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,8 +41,20 @@ public class GlobalExceptionHandler {
 
         // Trả về phản hồi với mã HTTP 400 (BAD_REQUEST)
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(errorCode.getHttpStatus())
                 .body(apiResponse);
+    }
+
+    @ExceptionHandler(value = AccessDeniedException.class)
+    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.builder()
+                        .code(errorCode.getErrorCode())
+                        .message(errorCode.getErrorMsg())
+                        .build());
     }
 
     // Xử lý ngoại lệ khi tham số không hợp lệ

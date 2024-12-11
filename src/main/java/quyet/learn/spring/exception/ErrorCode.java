@@ -1,35 +1,29 @@
 package quyet.learn.spring.exception;
 
+import lombok.Data;
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
 public enum ErrorCode {
-    UNCATEGORIZED_EXCEPTION(9999,"Uncategorized Exception error!"),
-    INVALID_KEY(1001,"Invalid message key!"),
-    USER_EXISTED(1002, "User Existed!"),
-    USER_NOT_EXISTED(1003, "User Not Existed!"),
-    USERNAME_INVALID(1004, "Username Must be at least 3 characters!"),
-    INVALID_PASSWORD(1005, "Password Must be at least 6 characters!"),
-    UNAUTHENTICATED(1006, "Unauthenticated Error!"),
+    UNCATEGORIZED_EXCEPTION(9999, "Uncategorized Exception error!", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_KEY(1001, "Invalid message key!", HttpStatus.BAD_REQUEST),
+    USER_EXISTED(1002, "User Existed!", HttpStatus.BAD_REQUEST),
+    USER_NOT_EXISTED(1003, "User Not Existed!", HttpStatus.NOT_FOUND),
+    USERNAME_INVALID(1004, "Username Must be at least 3 characters!", HttpStatus.BAD_REQUEST),
+    INVALID_PASSWORD(1005, "Password Must be at least 6 characters!", HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED(1006, "Unauthenticated Error!",HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(1007, "you do not have permission!",HttpStatus.FORBIDDEN),
     ;
     private int errorCode;
     private String errorMsg;
+    private HttpStatus httpStatus;
 
-    ErrorCode(int errorCode, String errorMsg) {
+    ErrorCode(int errorCode, String errorMsg, HttpStatus httpStatus) {
         this.errorCode = errorCode;
         this.errorMsg = errorMsg;
+        this.httpStatus = httpStatus;
     }
 
-    public int getErrorCode() {
-        return errorCode;
-    }
 
-    public void setErrorCode(int errorCode) {
-        this.errorCode = errorCode;
-    }
-
-    public String getErrorMsg() {
-        return errorMsg;
-    }
-
-    public void setErrorMsg(String errorMsg) {
-        this.errorMsg = errorMsg;
-    }
 }
