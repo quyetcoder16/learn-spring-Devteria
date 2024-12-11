@@ -18,13 +18,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handlingException(Exception exception) {
         // Tạo đối tượng phản hồi API
+        System.out.println(exception.getMessage());
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getErrorMsg());
         apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getErrorCode());
 
-        // Trả về phản hồi với mã HTTP 400 (BAD_REQUEST)
+        // Trả về phản hồi với mã HTTP 500 (INTERNAL_SERVER_ERROR)
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(apiResponse);
     }
 

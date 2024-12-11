@@ -4,11 +4,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
@@ -25,43 +23,41 @@ import quyet.learn.spring.service.UserService;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor // Tự động tạo constructor chứa các trường `final` hoặc được đánh dấu `@NonNull`.
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-// Tự động thiết lập quyền truy cập mặc định là private và final.
-@Slf4j // Kích hoạt logger để ghi log.
+@RequiredArgsConstructor // Tự động tạo constructor chứa các trường được đánh dấu là `final`.
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true) // Đặt mặc định các trường là `private` và `final`.
+@Slf4j // Kích hoạt tính năng ghi log.
 public class UserServiceImpl implements UserService {
 
-    // Repository để thao tác với cơ sở dữ liệu.
+    // Khai báo các repository để thao tác với cơ sở dữ liệu.
     UserRespository userRespository;
     RoleRespository roleRespository;
 
-    // Mapper để chuyển đổi giữa các đối tượng DTO và entity.
+    // Mapper dùng để chuyển đổi giữa các DTO và entity.
     UserMapper userMapper;
 
-    // Đối tượng mã hóa mật khẩu.
+    // Đối tượng dùng để mã hóa mật khẩu.
     PasswordEncoder passwordEncoder;
 
     /**
      * Tạo một người dùng mới.
      *
-     * @param userRequest thông tin người dùng từ request.
-     * @return Thông tin người dùng đã tạo dưới dạng UserResponse.
+     * @param userRequest thông tin người dùng từ yêu cầu.
+     * @return Trả về thông tin người dùng vừa được tạo (UserResponse).
      */
     @Override
     public UserResponse createUser(UserCreationRequest userRequest) {
 
-        // Kiểm tra nếu username đã tồn tại.
+        // Kiểm tra xem username đã tồn tại trong cơ sở dữ liệu chưa.
         if (userRespository.existsByUsername(userRequest.getUsername())) {
-            throw new AppException(ErrorCode.USER_EXISTED); // Ném ngoại lệ nếu người dùng đã tồn tại.
+            throw new AppException(ErrorCode.USER_EXISTED); // Nếu tồn tại, ném ngoại lệ.
         }
 
-        // Chuyển đổi request thành entity.
+        // Chuyển đổi DTO thành đối tượng Users (entity).
         Users user = userMapper.toUsers(userRequest);
 
-        // Mã hóa mật khẩu trước khi lưu.
+        // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu.
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
         // Thiết lập vai trò mặc định là USER.
@@ -69,90 +65,95 @@ public class UserServiceImpl implements UserService {
         roles.add(Role.USER.name());
 //        user.setRoles(roles);
 
-        // Lưu vào cơ sở dữ liệu và trả về đối tượng phản hồi.
+        // Lưu đối tượng người dùng vào cơ sở dữ liệu và trả về phản hồi.
         return userMapper.toUserResponse(userRespository.save(user));
     }
 
     /**
-     * Cập nhật thông tin người dùng.
+     * Cập nhật thông tin người dùng dựa trên ID.
      *
      * @param userId            ID người dùng cần cập nhật.
-     * @param userUpdateRequest thông tin cập nhật.
-     * @return Thông tin người dùng sau khi cập nhật.
+     * @param userUpdateRequest Thông tin cập nhật.
+     * @return Trả về thông tin người dùng sau khi cập nhật (UserResponse).
      */
     @Override
     public UserResponse updateUser(String userId, UserUpdateRequest userUpdateRequest) {
-        // Tìm người dùng theo ID.
+        // Tìm kiếm người dùng theo ID.
         Users user = userRespository.findById(userId).orElseThrow(() -> {
-            throw new AppException(ErrorCode.USER_NOT_EXISTED); // Ném ngoại lệ nếu không tìm thấy người dùng.
+            throw new AppException(ErrorCode.USER_NOT_EXISTED); // Nếu không tìm thấy, ném ngoại lệ.
         });
 
-
-        // Cập nhật thông tin người dùng từ request.
+        // Cập nhật các thông tin của người dùng từ yêu cầu.
         userMapper.updateUsers(user, userUpdateRequest);
+
+        // Lấy danh sách vai trò từ cơ sở dữ liệu và gán cho người dùng.
         var roles = roleRespository.findAllById(userUpdateRequest.getListRoles());
         user.setRoles(new HashSet<>(roles));
 
+        // Mã hóa mật khẩu mới trước khi lưu.
         user.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
 
-        // Lưu thông tin người dùng đã cập nhật và trả về phản hồi.
+        // Lưu thông tin người dùng đã cập nhật vào cơ sở dữ liệu.
         return userMapper.toUserResponse(userRespository.save(user));
     }
 
     /**
-     * Xóa người dùng.
+     * Xóa người dùng khỏi cơ sở dữ liệu.
      *
      * @param userId ID của người dùng cần xóa.
      */
     @Override
     public void deleteUser(String userId) {
-        userRespository.deleteById(userId); // Xóa người dùng khỏi cơ sở dữ liệu.
+        userRespository.deleteById(userId); // Xóa người dùng dựa trên ID.
     }
 
     /**
-     * Lấy thông tin người dùng theo ID.
+     * Lấy thông tin người dùng dựa trên ID.
      *
      * @param userId ID của người dùng.
-     * @return Thông tin người dùng dưới dạng UserResponse.
+     * @return Trả về thông tin người dùng (UserResponse).
      */
     @PostAuthorize("returnObject.username == authentication.name")
-    // Chỉ cho phép trả về nếu username khớp với username của người dùng đăng nhập.
+    // Chỉ trả về nếu username khớp với người dùng hiện đang đăng nhập.
     @Override
     public UserResponse getUser(String userId) {
-        log.info("In method get user by Id"); // Ghi log khi vào phương thức.
+        log.info("In method get user by Id"); // Ghi log khi gọi phương thức.
         return userMapper.toUserResponse(userRespository.findById(userId).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED))); // Ném ngoại lệ nếu không tìm thấy người dùng.
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED))); // Nếu không tìm thấy, ném ngoại lệ.
     }
 
     /**
-     * Lấy danh sách tất cả người dùng. Chỉ dành cho admin.
+     * Lấy danh sách tất cả người dùng (chỉ dành cho admin hoặc người có quyền đặc biệt).
      *
-     * @return Danh sách người dùng.
+     * @return Trả về danh sách người dùng dưới dạng List<UserResponse>.
      */
-
     @Override
-//    @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương thức này.
-    @PreAuthorize("hasAuthority('APPROVE_POST')")
+    //    @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương thức này.
+    @PreAuthorize("hasAuthority('APPROVE_POST')") // Chỉ cho phép người dùng có quyền cụ thể gọi phương thức này.
     public List<UserResponse> getAllUsers() {
-        log.info("In method get Users"); // Ghi log khi vào phương thức.
+        log.info("In method get Users"); // Ghi log khi gọi phương thức.
         return userRespository.findAll().stream()
-                .map(userMapper::toUserResponse) // Chuyển đổi từng entity thành DTO.
+                .map(userMapper::toUserResponse) // Chuyển đổi từng đối tượng entity thành DTO.
                 .toList();
     }
 
     /**
-     * Lấy thông tin của người dùng hiện tại (đang đăng nhập).
+     * Lấy thông tin của người dùng hiện tại (người đang đăng nhập).
      *
-     * @return Thông tin người dùng.
+     * @return Trả về thông tin của người dùng hiện tại dưới dạng UserResponse.
      */
     @Override
     public UserResponse getMyÌnfo() {
-        var context = SecurityContextHolder.getContext(); // Lấy SecurityContext hiện tại.
+        var context = SecurityContextHolder.getContext(); // Lấy đối tượng SecurityContext hiện tại.
         System.out.println(context.getAuthentication().toString()); // Ghi thông tin xác thực ra console.
         String name = context.getAuthentication().getName(); // Lấy username của người dùng hiện tại.
         System.out.println("======> subject: " + name); // name = subject in token
+
+        // Tìm người dùng trong cơ sở dữ liệu theo username.
         Users user = userRespository.findByUsername(name).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED)); // Ném ngoại lệ nếu không tìm thấy người dùng.
-        return userMapper.toUserResponse(user); // Trả về thông tin người dùng hiện tại.
+                () -> new AppException(ErrorCode.USER_NOT_EXISTED)); // Nếu không tìm thấy, ném ngoại lệ.
+
+        // Trả về thông tin của người dùng.
+        return userMapper.toUserResponse(user);
     }
 }

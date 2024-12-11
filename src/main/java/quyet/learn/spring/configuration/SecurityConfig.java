@@ -21,9 +21,9 @@ import quyet.learn.spring.enums.Role;
 
 import javax.crypto.spec.SecretKeySpec;
 
-@Configuration // Đánh dấu class này là class cấu hình trong Spring.
+@Configuration // Đánh dấu class này là class cấu hình Spring.
 @EnableWebSecurity // Kích hoạt cấu hình bảo mật Spring Security.
-@EnableMethodSecurity // config to enable method secirity PreAuthorize and PostAuthorize
+@EnableMethodSecurity // Kích hoạt bảo mật phương thức, hỗ trợ @PreAuthorize và @PostAuthorize.
 public class SecurityConfig {
 
     @Value("${jwt.singerKey}") // Lấy giá trị khóa bí mật từ file cấu hình.
@@ -36,28 +36,24 @@ public class SecurityConfig {
      * Cấu hình chuỗi filter bảo mật.
      *
      * @param httpSecurity đối tượng HttpSecurity để cấu hình bảo mật.
-     * @return SecurityFilterChain đối tượng chuỗi filter.
+     * @return SecurityFilterChain đối tượng chuỗi filter bảo mật.
      * @throws Exception nếu xảy ra lỗi khi cấu hình.
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        // Cấu hình xác thực các request HTTP.
-        httpSecurity.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll() // Cho phép POST đến các endpoint công khai.
-                        // .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name()) // Chỉ admin được phép GET /users.
-                        .anyRequest().authenticated() // Các request khác yêu cầu xác thực.
-        );
-
-        // Cấu hình bảo mật dựa trên JWT.
-        httpSecurity.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwtConfigurer ->
-                        jwtConfigurer.decoder(jwtDecoder()) // Sử dụng jwtDecoder để giải mã token.
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter())) // Sử dụng converter để ánh xạ quyền từ token.
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
-        );
-
-        // Vô hiệu hóa bảo vệ CSRF (thích hợp cho API REST).
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
+        httpSecurity
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll() // Cho phép truy cập các endpoint công khai với POST.
+                                // .requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name()) // Chỉ admin được phép GET /users.
+                                .anyRequest().authenticated() // Yêu cầu xác thực cho các endpoint khác.
+                )
+                .oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(jwtConfigurer ->
+                                        jwtConfigurer.decoder(jwtDecoder()) // Sử dụng jwtDecoder để giải mã JWT.
+                                                .jwtAuthenticationConverter(jwtAuthenticationConverter())) // Cấu hình ánh xạ quyền từ token.
+                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) // Xử lý lỗi xác thực JWT.
+                )
+                .csrf(AbstractHttpConfigurer::disable); // Vô hiệu hóa CSRF (phù hợp với API REST).
 
         return httpSecurity.build(); // Trả về chuỗi filter bảo mật đã cấu hình.
     }
@@ -65,11 +61,11 @@ public class SecurityConfig {
     /**
      * Cấu hình chuyển đổi thông tin xác thực từ JWT.
      *
-     * @return JwtAuthenticationConverter đối tượng chuyển đổi.
+     * @return JwtAuthenticationConverter đối tượng chuyển đổi xác thực JWT.
      */
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix(""); // Bỏ tiền tố mặc định "ROLE_" để khớp với dữ liệu trong JWT.
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter); // Sử dụng converter để ánh xạ quyền.
@@ -84,10 +80,9 @@ public class SecurityConfig {
      */
     @Bean
     JwtDecoder jwtDecoder() {
-        // Tạo khóa bí mật từ singerKey với thuật toán HmacSHA256.
-        SecretKeySpec secretKeySpec = new SecretKeySpec(singerKey.getBytes(), "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec) // Tạo JwtDecoder với khóa bí mật.
-                .macAlgorithm(MacAlgorithm.HS256) // Sử dụng thuật toán HS256.
+        SecretKeySpec secretKeySpec = new SecretKeySpec(singerKey.getBytes(), "HmacSHA256"); // Tạo khóa bí mật từ singerKey.
+        return NimbusJwtDecoder.withSecretKey(secretKeySpec) // Sử dụng NimbusJwtDecoder với khóa bí mật.
+                .macAlgorithm(MacAlgorithm.HS256) // Thuật toán giải mã HS256.
                 .build();
     }
 
@@ -98,6 +93,6 @@ public class SecurityConfig {
      */
     @Bean
     PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10); // Sử dụng BCrypt với strength = 10.
+        return new BCryptPasswordEncoder(10); // Mã hóa mật khẩu với độ mạnh 10.
     }
 }

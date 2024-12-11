@@ -33,42 +33,42 @@ import java.util.Date;
 import java.util.StringJoiner;
 
 /**
- * AuthServiceImpl: Implementation của AuthService, chịu trách nhiệm xử lý xác thực và kiểm tra token JWT.
+ * AuthServiceImpl: Triển khai AuthService, chịu trách nhiệm xử lý xác thực người dùng và token JWT.
  */
-@Slf4j // Cung cấp logger để ghi lại log trong quá trình chạy.
-@Service // Annotate class là một service trong Spring.
+@Slf4j // Tích hợp logger để ghi log trong quá trình xử lý.
+@Service // Đánh dấu class là một service trong Spring.
 @RequiredArgsConstructor // Tự động tạo constructor với các field có `final`.
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true) // Tự động thiết lập các field private và final.
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true) // Đặt các field là private và final theo mặc định.
 public class AuthServiceImpl implements AuthService {
 
     @Autowired
-    private UserRespository userRespository; // Repository để truy xuất dữ liệu người dùng từ database.
+    private UserRespository userRespository; // Repository để truy vấn thông tin người dùng từ cơ sở dữ liệu.
 
-    @NonFinal // Biến này không cần phải final vì được inject từ @Value.
-    @Value("${jwt.singerKey}") // Lấy giá trị từ file cấu hình application.properties hoặc application.yml.
+    @NonFinal // Không cần final vì giá trị được inject từ @Value.
+    @Value("${jwt.singerKey}") // Lấy khóa ký JWT từ cấu hình.
     protected String SIGNER_KEY;
 
     /**
-     * Phương thức xử lý xác thực người dùng.
+     * Xác thực thông tin người dùng dựa trên username và password.
      *
-     * @param authenticationRequest yêu cầu chứa thông tin username và password.
-     * @return AuthenticationResponse chứa token JWT và trạng thái xác thực.
+     * @param authenticationRequest Yêu cầu chứa thông tin xác thực.
+     * @return AuthenticationResponse Phản hồi chứa token JWT và trạng thái xác thực.
      */
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
-        // Lấy thông tin người dùng từ database.
+        // Tìm người dùng theo username từ cơ sở dữ liệu.
         var user = userRespository.findByUsername(authenticationRequest.getUsername()).orElseThrow(() -> {
-            throw new AppException(ErrorCode.USER_NOT_EXISTED); // Nếu không tìm thấy user, ném lỗi.
+            throw new AppException(ErrorCode.USER_NOT_EXISTED); // Ném lỗi nếu không tìm thấy người dùng.
         });
 
-        // So sánh mật khẩu được mã hóa.
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10); // Sử dụng BCrypt với strength 10.
+        // Kiểm tra mật khẩu đã được mã hóa bằng BCrypt.
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10); // Sử dụng BCrypt với độ mạnh 10.
         boolean authenticated = passwordEncoder.matches(authenticationRequest.getPassword(), user.getPassword());
         if (!authenticated) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED); // Nếu sai mật khẩu, ném lỗi.
+            throw new AppException(ErrorCode.UNAUTHENTICATED); // Ném lỗi nếu mật khẩu không khớp.
         }
 
-        // Tạo token JWT sau khi xác thực thành công.
+        // Tạo token JWT khi xác thực thành công.
         var token = gennerateToken(user);
 
         // Trả về phản hồi chứa token và trạng thái xác thực.
@@ -79,22 +79,22 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Phương thức kiểm tra tính hợp lệ của token JWT.
+     * Kiểm tra tính hợp lệ của token JWT.
      *
-     * @param introspectRequest yêu cầu chứa token JWT.
-     * @return IntrospectResponse chứa trạng thái hợp lệ của token.
-     * @throws JOSEException  nếu lỗi trong việc xử lý JWT.
-     * @throws ParseException nếu lỗi trong việc phân tích token.
+     * @param introspectRequest Yêu cầu chứa token cần kiểm tra.
+     * @return IntrospectResponse Phản hồi trạng thái hợp lệ của token.
+     * @throws JOSEException  Lỗi xử lý chữ ký JWT.
+     * @throws ParseException Lỗi phân tích cú pháp token.
      */
     @Override
     public IntrospectResponse introspect(IntrospectRequest introspectRequest) throws JOSEException, ParseException {
         var token = introspectRequest.getToken(); // Lấy token từ yêu cầu.
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes()); // Tạo verifier với SIGNER_KEY.
-        SignedJWT signedJWT = SignedJWT.parse(token); // Phân tích token thành đối tượng SignedJWT.
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes()); // Tạo verifier để kiểm tra chữ ký.
+        SignedJWT signedJWT = SignedJWT.parse(token); // Phân tích cú pháp token.
 
         Date expiration = signedJWT.getJWTClaimsSet().getExpirationTime(); // Lấy thời gian hết hạn của token.
 
-        // Kiểm tra tính hợp lệ của chữ ký và thời gian hết hạn.
+        // Kiểm tra chữ ký hợp lệ và token chưa hết hạn.
         var verified = signedJWT.verify(verifier);
 
         return IntrospectResponse.builder()
@@ -103,10 +103,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Phương thức tạo token JWT.
+     * Tạo token JWT cho người dùng.
      *
-     * @param user nguoi dung.
-     * @return chuỗi token JWT.
+     * @param user Thông tin người dùng.
+     * @return Chuỗi token JWT.
      */
     private String gennerateToken(Users user) {
         // Tạo header của token với thuật toán HS256.
@@ -114,38 +114,41 @@ public class AuthServiceImpl implements AuthService {
 
         // Tạo payload của token, bao gồm các claims.
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUsername()) // Đặt subject là username.
-                .issuer("quyet.learn.spring") // Đặt issuer là hệ thống hiện tại.
+                .subject(user.getUsername()) // Subject là username của người dùng.
+                .issuer("quyet.learn.spring") // Định danh của hệ thống phát hành token.
                 .issueTime(new Date()) // Thời gian phát hành token.
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli() // Token hết hạn sau 1 giờ.
                 ))
                 .claim("userId", user.getId()) // Thêm thông tin bổ sung userId.
-                .claim("scope", buildScope(user))
+                .claim("scope", buildScope(user)) // Thêm thông tin quyền hạn (scope).
                 .build();
 
-        // Chuyển payload sang đối tượng JWSObject.
-        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
-        JWSObject jwsObject = new JWSObject(jwsHeader, payload);
-
         try {
-            // Ký token với SIGNER_KEY.
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
-            return jwsObject.serialize(); // Trả về token ở dạng chuỗi.
+            // Ký token với khóa bí mật.
+            SignedJWT signedJWT = new SignedJWT(jwsHeader, jwtClaimsSet);
+            signedJWT.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            return signedJWT.serialize(); // Trả về token dưới dạng chuỗi.
         } catch (JOSEException e) {
-            log.error("Can't create token", e); // Ghi log lỗi nếu xảy ra lỗi.
-            throw new RuntimeException(e); // Ném RuntimeException.
+            log.error("Can't create token", e); // Ghi log lỗi nếu xảy ra vấn đề khi ký.
+            throw new RuntimeException(e); // Ném lỗi runtime nếu ký thất bại.
         }
     }
 
+    /**
+     * Xây dựng thông tin quyền hạn (scope) của người dùng.
+     *
+     * @param user Thông tin người dùng.
+     * @return Chuỗi scope chứa các quyền và vai trò của người dùng.
+     */
     private String buildScope(Users user) {
         StringJoiner scopeJoiner = new StringJoiner(" ");
         if (!CollectionUtils.isEmpty(user.getRoles())) {
             user.getRoles().forEach(role -> {
-                scopeJoiner.add("ROLE_" + role.getName());
+                scopeJoiner.add("ROLE_" + role.getName()); // Thêm vai trò vào scope.
                 if (!CollectionUtils.isEmpty(role.getPermissions())) {
                     role.getPermissions().forEach(permission -> {
-                        scopeJoiner.add(permission.getName());
+                        scopeJoiner.add(permission.getName()); // Thêm quyền vào scope.
                     });
                 }
             });
