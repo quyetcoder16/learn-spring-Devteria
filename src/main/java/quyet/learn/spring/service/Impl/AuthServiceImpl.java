@@ -121,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli() // Token hết hạn sau 1 giờ.
                 ))
                 .claim("userId", user.getId()) // Thêm thông tin bổ sung userId.
-                .claim("scope",buildScope(user))
+                .claim("scope", buildScope(user))
                 .build();
 
         // Chuyển payload sang đối tượng JWSObject.
@@ -140,9 +140,14 @@ public class AuthServiceImpl implements AuthService {
 
     private String buildScope(Users user) {
         StringJoiner scopeJoiner = new StringJoiner(" ");
-        if(!CollectionUtils.isEmpty(user.getRoles())) {
+        if (!CollectionUtils.isEmpty(user.getRoles())) {
             user.getRoles().forEach(role -> {
-                scopeJoiner.add(role);
+                scopeJoiner.add("ROLE_" + role.getName());
+                if (!CollectionUtils.isEmpty(role.getPermissions())) {
+                    role.getPermissions().forEach(permission -> {
+                        scopeJoiner.add(permission.getName());
+                    });
+                }
             });
         }
         return scopeJoiner.toString();

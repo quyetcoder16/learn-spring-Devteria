@@ -69,7 +69,7 @@ public class SecurityConfig {
      */
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_"); // Thêm tiền tố "ROLE_" cho quyền.
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter); // Sử dụng converter để ánh xạ quyền.
