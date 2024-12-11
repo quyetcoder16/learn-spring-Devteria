@@ -10,9 +10,7 @@ spring:
     show-sql: true
 
 
-logging:
-  level:
-    root: info
+
 server:
   port: 8081
   servlet:
