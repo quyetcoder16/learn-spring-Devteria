@@ -19,6 +19,7 @@ import quyet.learn.spring.enums.Role;
 import quyet.learn.spring.exception.AppException;
 import quyet.learn.spring.exception.ErrorCode;
 import quyet.learn.spring.mapper.UserMapper;
+import quyet.learn.spring.resporitory.RoleRespository;
 import quyet.learn.spring.resporitory.UserRespository;
 import quyet.learn.spring.service.UserService;
 
@@ -35,6 +36,7 @@ public class UserServiceImpl implements UserService {
 
     // Repository để thao tác với cơ sở dữ liệu.
     UserRespository userRespository;
+    RoleRespository roleRespository;
 
     // Mapper để chuyển đổi giữa các đối tượng DTO và entity.
     UserMapper userMapper;
@@ -65,7 +67,7 @@ public class UserServiceImpl implements UserService {
         // Thiết lập vai trò mặc định là USER.
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
-        user.setRoles(roles);
+//        user.setRoles(roles);
 
         // Lưu vào cơ sở dữ liệu và trả về đối tượng phản hồi.
         return userMapper.toUserResponse(userRespository.save(user));
@@ -85,8 +87,13 @@ public class UserServiceImpl implements UserService {
             throw new AppException(ErrorCode.USER_NOT_EXISTED); // Ném ngoại lệ nếu không tìm thấy người dùng.
         });
 
+
         // Cập nhật thông tin người dùng từ request.
         userMapper.updateUsers(user, userUpdateRequest);
+        var roles = roleRespository.findAllById(userUpdateRequest.getListRoles());
+        user.setRoles(new HashSet<>(roles));
+
+        user.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
 
         // Lưu thông tin người dùng đã cập nhật và trả về phản hồi.
         return userMapper.toUserResponse(userRespository.save(user));
@@ -124,7 +131,8 @@ public class UserServiceImpl implements UserService {
      */
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương thức này.
+//    @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương thức này.
+    @PreAuthorize("hasAuthority('APPROVE_POST')")
     public List<UserResponse> getAllUsers() {
         log.info("In method get Users"); // Ghi log khi vào phương thức.
         return userRespository.findAll().stream()

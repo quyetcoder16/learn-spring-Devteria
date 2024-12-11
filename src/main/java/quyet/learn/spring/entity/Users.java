@@ -35,6 +35,7 @@ public class Users {
     @Column(name = "dob")
     private LocalDate dateOfBirth;
 
-    Set<String> roles;
+    @ManyToMany
+    Set<Role> roles;
 
 }

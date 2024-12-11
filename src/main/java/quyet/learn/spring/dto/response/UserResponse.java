@@ -2,6 +2,8 @@ package quyet.learn.spring.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import quyet.learn.spring.dto.response.role.RoleResponse;
+import quyet.learn.spring.entity.Role;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -17,5 +19,5 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
-    Set<String> roles;
+    Set<RoleResponse> roles;
 }
