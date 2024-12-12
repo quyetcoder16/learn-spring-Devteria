@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import quyet.learn.spring.dto.request.auth.AuthenticationRequest;
 import quyet.learn.spring.dto.request.auth.IntrospectRequest;
+import quyet.learn.spring.dto.request.auth.LogoutRequest;
 import quyet.learn.spring.dto.response.ApiResponse;
 import quyet.learn.spring.dto.response.auth.AuthenticationResponse;
 import quyet.learn.spring.dto.response.auth.IntrospectResponse;
@@ -41,6 +42,14 @@ public class AuthenticationController {
         var result = authService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder()
                 .data(result)
+                .build();
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@RequestBody final LogoutRequest request) throws ParseException, JOSEException {
+        authService.logout(request);
+        return ApiResponse.<Void>builder()
+
                 .build();
     }
 }
