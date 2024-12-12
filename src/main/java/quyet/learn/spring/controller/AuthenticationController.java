@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import quyet.learn.spring.dto.request.auth.AuthenticationRequest;
 import quyet.learn.spring.dto.request.auth.IntrospectRequest;
 import quyet.learn.spring.dto.request.auth.LogoutRequest;
+import quyet.learn.spring.dto.request.auth.RefreshRequest;
 import quyet.learn.spring.dto.response.ApiResponse;
 import quyet.learn.spring.dto.response.auth.AuthenticationResponse;
 import quyet.learn.spring.dto.response.auth.IntrospectResponse;
@@ -33,6 +34,16 @@ public class AuthenticationController {
         var result = authService.authenticate(authenticationRequest);
         return ApiResponse.<AuthenticationResponse>builder()
 
+                .data(result)
+                .build();
+    }
+
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> authenticate(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+        var result = authService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
                 .data(result)
                 .build();
     }

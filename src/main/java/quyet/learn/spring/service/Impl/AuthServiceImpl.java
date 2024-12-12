@@ -19,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 import quyet.learn.spring.dto.request.auth.AuthenticationRequest;
 import quyet.learn.spring.dto.request.auth.IntrospectRequest;
 import quyet.learn.spring.dto.request.auth.LogoutRequest;
+import quyet.learn.spring.dto.request.auth.RefreshRequest;
 import quyet.learn.spring.dto.response.auth.AuthenticationResponse;
 import quyet.learn.spring.dto.response.auth.IntrospectResponse;
 import quyet.learn.spring.entity.InvalidatedToken;
@@ -116,6 +117,34 @@ public class AuthServiceImpl implements AuthService {
                 .expiryTime(exprityTime)
                 .build();
         invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    @Override
+    public AuthenticationResponse refreshToken(RefreshRequest refreshRequest) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(refreshRequest.getToken());
+
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+
+        var user = userRespository.findByUsername(username).orElseThrow(
+                () -> new AppException(ErrorCode.UNAUTHENTICATED)
+        );
+
+        var token = gennerateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
     }
 
     private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
