@@ -32,7 +32,7 @@ public class SecurityConfig {
     private CustomJwtDecoder customJwtDecoder;
 
     // Các endpoint không yêu cầu xác thực.
-    private final String[] PUBLIC_ENDPOINTS = {"/auth/token", "/auth/introspect", "/users", "/auth/logout"};
+    private final String[] PUBLIC_ENDPOINTS = {"/auth/token", "/auth/introspect", "/users", "/auth/logout", "/auth/refresh"};
 
     /**
      * Cấu hình chuỗi filter bảo mật.

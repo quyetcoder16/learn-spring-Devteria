@@ -49,6 +49,7 @@ public class CustomJwtDecoder implements JwtDecoder {
                     .token(token) // Gửi token đến endpoint introspect để kiểm tra tính hợp lệ
                     .build());
 
+
             // Nếu máy chủ trả về không hợp lệ, ném ngoại lệ JwtException
             if (!response.isValid())
                 throw new JwtException("Token invalid");
@@ -59,17 +60,19 @@ public class CustomJwtDecoder implements JwtDecoder {
 
         // Bước 2: Khởi tạo NimbusJwtDecoder nếu chưa được khởi tạo
         if (Objects.isNull(nimbusJwtDecoder)) {
-            // Tạo SecretKeySpec từ khóa ký JWT và thuật toán HS512
-            SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS512");
+            // Tạo SecretKeySpec từ khóa ký JWT và thuật toán HS256
+            SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS256");
 
-            // Khởi tạo NimbusJwtDecoder với secret key và thuật toán ký HS512
+            // Khởi tạo NimbusJwtDecoder với secret key và thuật toán ký HS256
             nimbusJwtDecoder = NimbusJwtDecoder
                     .withSecretKey(secretKeySpec)
-                    .macAlgorithm(MacAlgorithm.HS512) // Xác định thuật toán MAC là HS512
+                    .macAlgorithm(MacAlgorithm.HS256) // Xác định thuật toán MAC là HS256
                     .build();
         }
 
+
         // Bước 3: Giải mã token bằng NimbusJwtDecoder
         return nimbusJwtDecoder.decode(token);
+
     }
 }
