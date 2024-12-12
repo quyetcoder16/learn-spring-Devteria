@@ -18,11 +18,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import quyet.learn.spring.dto.request.auth.AuthenticationRequest;
 import quyet.learn.spring.dto.request.auth.IntrospectRequest;
+import quyet.learn.spring.dto.request.auth.LogoutRequest;
 import quyet.learn.spring.dto.response.auth.AuthenticationResponse;
 import quyet.learn.spring.dto.response.auth.IntrospectResponse;
+import quyet.learn.spring.entity.InvalidatedToken;
 import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.exception.AppException;
 import quyet.learn.spring.exception.ErrorCode;
+import quyet.learn.spring.resporitory.InvalidatedTokenRepository;
 import quyet.learn.spring.resporitory.UserRespository;
 import quyet.learn.spring.service.AuthService;
 
@@ -31,6 +34,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 /**
  * AuthServiceImpl: Triển khai AuthService, chịu trách nhiệm xử lý xác thực người dùng và token JWT.
@@ -43,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UserRespository userRespository; // Repository để truy vấn thông tin người dùng từ cơ sở dữ liệu.
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal // Không cần final vì giá trị được inject từ @Value.
     @Value("${jwt.singerKey}") // Lấy khóa ký JWT từ cấu hình.
@@ -89,6 +94,31 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public IntrospectResponse introspect(IntrospectRequest introspectRequest) throws JOSEException, ParseException {
         var token = introspectRequest.getToken(); // Lấy token từ yêu cầu.
+
+        boolean isValid = true;
+        try {
+            verifyToken(token);
+        } catch (AppException e) {
+            isValid = false;
+        }
+        return IntrospectResponse.builder()
+                .valid(isValid)
+                .build();
+    }
+
+    @Override
+    public void logout(LogoutRequest logoutRequest) throws ParseException, JOSEException {
+        var signeToken = verifyToken(logoutRequest.getToken());
+        String jit = signeToken.getJWTClaimsSet().getJWTID();
+        Date exprityTime = signeToken.getJWTClaimsSet().getExpirationTime();
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(exprityTime)
+                .build();
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes()); // Tạo verifier để kiểm tra chữ ký.
         SignedJWT signedJWT = SignedJWT.parse(token); // Phân tích cú pháp token.
 
@@ -97,9 +127,14 @@ public class AuthServiceImpl implements AuthService {
         // Kiểm tra chữ ký hợp lệ và token chưa hết hạn.
         var verified = signedJWT.verify(verifier);
 
-        return IntrospectResponse.builder()
-                .valid(verified && expiration.after(new Date())) // Token hợp lệ nếu có chữ ký đúng và chưa hết hạn.
-                .build();
+        if (!(verified && expiration.after(new Date()))) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+
+        return signedJWT;
     }
 
     /**
@@ -120,6 +155,7 @@ public class AuthServiceImpl implements AuthService {
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli() // Token hết hạn sau 1 giờ.
                 ))
+                .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId()) // Thêm thông tin bổ sung userId.
                 .claim("scope", buildScope(user)) // Thêm thông tin quyền hạn (scope).
                 .build();

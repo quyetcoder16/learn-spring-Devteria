@@ -1,5 +1,6 @@
 package quyet.learn.spring.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,11 +27,12 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableMethodSecurity // Kích hoạt bảo mật phương thức, hỗ trợ @PreAuthorize và @PostAuthorize.
 public class SecurityConfig {
 
-    @Value("${jwt.singerKey}") // Lấy giá trị khóa bí mật từ file cấu hình.
-    private String singerKey;
+
+    @Autowired
+    private CustomJwtDecoder customJwtDecoder;
 
     // Các endpoint không yêu cầu xác thực.
-    private final String[] PUBLIC_ENDPOINTS = {"/auth/token", "/auth/introspect", "/users"};
+    private final String[] PUBLIC_ENDPOINTS = {"/auth/token", "/auth/introspect", "/users", "/auth/logout"};
 
     /**
      * Cấu hình chuỗi filter bảo mật.
@@ -49,7 +51,7 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(jwtConfigurer ->
-                                        jwtConfigurer.decoder(jwtDecoder()) // Sử dụng jwtDecoder để giải mã JWT.
+                                        jwtConfigurer.decoder(customJwtDecoder) // Sử dụng jwtDecoder để giải mã JWT.
                                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())) // Cấu hình ánh xạ quyền từ token.
                                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) // Xử lý lỗi xác thực JWT.
                 )
@@ -73,18 +75,6 @@ public class SecurityConfig {
         return jwtAuthenticationConverter;
     }
 
-    /**
-     * Cấu hình giải mã JWT.
-     *
-     * @return JwtDecoder đối tượng giải mã JWT.
-     */
-    @Bean
-    JwtDecoder jwtDecoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(singerKey.getBytes(), "HmacSHA256"); // Tạo khóa bí mật từ singerKey.
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec) // Sử dụng NimbusJwtDecoder với khóa bí mật.
-                .macAlgorithm(MacAlgorithm.HS256) // Thuật toán giải mã HS256.
-                .build();
-    }
 
     /**
      * Cấu hình mã hóa mật khẩu bằng BCrypt.
