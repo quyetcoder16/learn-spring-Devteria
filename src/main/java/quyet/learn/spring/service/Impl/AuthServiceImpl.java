@@ -54,6 +54,14 @@ public class AuthServiceImpl implements AuthService {
     @Value("${jwt.singerKey}") // Lấy khóa ký JWT từ cấu hình.
     protected String SIGNER_KEY;
 
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected Long REFRESHABLE_DURATION;
+
     /**
      * Xác thực thông tin người dùng dựa trên username và password.
      *
@@ -98,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
 
         boolean isValid = true;
         try {
-            verifyToken(token);
+            verifyToken(token, false);
         } catch (AppException e) {
             isValid = false;
         }
@@ -107,61 +115,102 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Phương thức logout thực hiện đăng xuất và vô hiệu hóa token.
+     *
+     * @param logoutRequest Yêu cầu đăng xuất.
+     * @throws ParseException Nếu token không thể phân tích cú pháp.
+     * @throws JOSEException  Nếu token không thể kiểm tra chữ ký.
+     */
     @Override
     public void logout(LogoutRequest logoutRequest) throws ParseException, JOSEException {
-        var signeToken = verifyToken(logoutRequest.getToken());
-        String jit = signeToken.getJWTClaimsSet().getJWTID();
-        Date exprityTime = signeToken.getJWTClaimsSet().getExpirationTime();
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(jit)
-                .expiryTime(exprityTime)
-                .build();
-        invalidatedTokenRepository.save(invalidatedToken);
+        try {
+            // Xác thực và lấy thông tin từ token.
+            var signedToken = verifyToken(logoutRequest.getToken(), true);
+            String jit = signedToken.getJWTClaimsSet().getJWTID(); // Lấy ID của token.
+            Date expiryTime = signedToken.getJWTClaimsSet().getExpirationTime(); // Lấy thời gian hết hạn.
+
+            // Tạo đối tượng InvalidatedToken để lưu token đã vô hiệu hóa.
+            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                    .id(jit)
+                    .expiryTime(expiryTime)
+                    .build();
+
+            // Lưu token vào cơ sở dữ liệu.
+            invalidatedTokenRepository.save(invalidatedToken);
+        } catch (AppException e) {
+            log.info("Token already expired"); // Ghi log nếu token đã hết hạn.
+        }
     }
 
+    /**
+     * Phương thức refreshToken tạo token mới dựa trên token hiện tại.
+     *
+     * @param refreshRequest Yêu cầu làm mới token.
+     * @return Đối tượng AuthenticationResponse chứa token mới.
+     */
     @Override
     public AuthenticationResponse refreshToken(RefreshRequest refreshRequest) throws ParseException, JOSEException {
-        var signedJWT = verifyToken(refreshRequest.getToken());
+        // Xác thực token hiện tại và kiểm tra quyền làm mới.
+        var signedJWT = verifyToken(refreshRequest.getToken(), true);
 
+        // Lấy thông tin ID và thời gian hết hạn từ token.
         var jit = signedJWT.getJWTClaimsSet().getJWTID();
         var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(jit)
-                .expiryTime(expiryTime)
-                .build();
+        // Kiểm tra nếu token đã hết hạn thì không thêm vào InvalidatedToken
+        if (expiryTime.after(new Date())) {
+            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                    .id(jit)
+                    .expiryTime(expiryTime)
+                    .build();
+            invalidatedTokenRepository.save(invalidatedToken);
+        }
 
-        invalidatedTokenRepository.save(invalidatedToken);
-
+        // Lấy thông tin người dùng từ token.
         var username = signedJWT.getJWTClaimsSet().getSubject();
-
         var user = userRespository.findByUsername(username).orElseThrow(
                 () -> new AppException(ErrorCode.UNAUTHENTICATED)
         );
 
+        // Tạo token mới.
         var token = gennerateToken(user);
 
+        // Trả về phản hồi với token mới.
         return AuthenticationResponse.builder()
                 .token(token)
                 .authenticated(true)
                 .build();
     }
 
-    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes()); // Tạo verifier để kiểm tra chữ ký.
-        SignedJWT signedJWT = SignedJWT.parse(token); // Phân tích cú pháp token.
+    /**
+     * Phương thức verifyToken kiểm tra tính hợp lệ của token JWT.
+     *
+     * @param token     Token cần kiểm tra.
+     * @param isRefresh Đánh dấu token được dùng để làm mới.
+     * @return Đối tượng SignedJWT sau khi xác minh.
+     */
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+        // Tạo verifier để kiểm tra chữ ký token.
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        SignedJWT signedJWT = SignedJWT.parse(token);
 
-        Date expiration = signedJWT.getJWTClaimsSet().getExpirationTime(); // Lấy thời gian hết hạn của token.
+        // Xác định thời gian hết hạn của token dựa trên isRefresh.
+        Date expiration = isRefresh
+                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime().toInstant()
+                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        // Kiểm tra chữ ký hợp lệ và token chưa hết hạn.
+        // Kiểm tra chữ ký và hạn token.
         var verified = signedJWT.verify(verifier);
-
         if (!(verified && expiration.after(new Date()))) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
+        // Kiểm tra token có bị vô hiệu hóa hay không.
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
 
         return signedJWT;
     }
@@ -182,7 +231,7 @@ public class AuthServiceImpl implements AuthService {
                 .issuer("quyet.learn.spring") // Định danh của hệ thống phát hành token.
                 .issueTime(new Date()) // Thời gian phát hành token.
                 .expirationTime(new Date(
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli() // Token hết hạn sau 1 giờ.
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli() // Token hết hạn sau 1 giờ.
                 ))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId()) // Thêm thông tin bổ sung userId.

@@ -18,3 +18,5 @@ server:
 
 jwt:
   singerKey: "6ycsb5jxe6lplzxtz9e3jvl3btrpd5kh"
+  valid-duration: 10 # in second
+  refreshable-duration: 120 # in second
