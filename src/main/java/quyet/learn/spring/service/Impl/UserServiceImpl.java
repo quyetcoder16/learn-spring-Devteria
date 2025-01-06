@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserResponse createUser(UserCreationRequest userRequest) {
-
+        log.info("Service : Creating user: ");
         // Kiểm tra xem username đã tồn tại trong cơ sở dữ liệu chưa.
         if (userRespository.existsByUsername(userRequest.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED); // Nếu tồn tại, ném ngoại lệ.
@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
         // Thiết lập vai trò mặc định là USER.
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
-//        user.setRoles(roles);
+        // user.setRoles(roles);
 
         // Lưu đối tượng người dùng vào cơ sở dữ liệu và trả về phản hồi.
         return userMapper.toUserResponse(userRespository.save(user));
@@ -123,12 +123,14 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Lấy danh sách tất cả người dùng (chỉ dành cho admin hoặc người có quyền đặc biệt).
+     * Lấy danh sách tất cả người dùng (chỉ dành cho admin hoặc người có quyền đặc
+     * biệt).
      *
      * @return Trả về danh sách người dùng dưới dạng List<UserResponse>.
      */
     @Override
-    //    @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương thức này.
+    // @PreAuthorize("hasRole('ADMIN')") // Chỉ cho phép admin truy cập vào phương
+    // thức này.
     @PreAuthorize("hasAuthority('APPROVE_POST')") // Chỉ cho phép người dùng có quyền cụ thể gọi phương thức này.
     public List<UserResponse> getAllUsers() {
         log.info("In method get Users"); // Ghi log khi gọi phương thức.
