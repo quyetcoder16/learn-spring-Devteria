@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.response.UserResponse;
@@ -17,6 +18,7 @@ import quyet.learn.spring.exception.ErrorCode;
 import quyet.learn.spring.resporitory.UserRespository;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 // Chú thích: @SpringBootTest để chạy ngữ cảnh Spring trong môi trường kiểm thử
 @SpringBootTest
@@ -95,4 +97,25 @@ public class UserServiceTest {
         Assertions.assertEquals(exception.getMessage(), ErrorCode.USER_EXISTED.getErrorMsg()); // Kiểm tra thông báo lỗi
         Assertions.assertEquals(exception.getErrorCode().getErrorCode(), ErrorCode.USER_EXISTED.getErrorCode()); // Kiểm tra mã lỗi
     }
+
+    @Test
+    @WithMockUser(username = "jon")
+    void getMyInfo_valid_success() {
+        Mockito.when(userRespository.findByUsername(ArgumentMatchers.anyString())).thenReturn(Optional.of(user));
+
+        var response = userService.getMyÌnfo();
+        Assertions.assertEquals(userResponse.getId(), response.getId());
+        Assertions.assertEquals(userResponse.getUsername(), response.getUsername());
+        Assertions.assertEquals(userResponse.getFirstName(), response.getFirstName());
+    }
+
+    @Test
+    @WithMockUser(username = "jon")
+    void getMyInfo_userNotFound_error() {
+        Mockito.when(userRespository.findByUsername(ArgumentMatchers.anyString())).thenReturn(Optional.ofNullable(null));
+//        when
+        var exception = Assertions.assertThrowsExactly(AppException.class, () -> userService.getMyÌnfo());
+        Assertions.assertEquals(exception.getErrorCode().getErrorCode(), ErrorCode.USER_NOT_EXISTED.getErrorCode());
+    }
+
 }
