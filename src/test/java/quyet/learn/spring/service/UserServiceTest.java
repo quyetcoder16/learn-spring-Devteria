@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.TestPropertySource;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.response.UserResponse;
 import quyet.learn.spring.entity.Users;
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 
 // Chú thích: @SpringBootTest để chạy ngữ cảnh Spring trong môi trường kiểm thử
 @SpringBootTest
+@TestPropertySource("/test.properties")
 public class UserServiceTest {
 
     @Autowired
