@@ -1,18 +1,19 @@
 package quyet.learn.spring.service.Impl;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import quyet.learn.spring.dto.request.permission.PermissionRequest;
 import quyet.learn.spring.dto.response.permission.PermissionResponse;
 import quyet.learn.spring.entity.Permission;
 import quyet.learn.spring.mapper.PermissionMapper;
 import quyet.learn.spring.resporitory.PermissionRespository;
 import quyet.learn.spring.service.PermissionService;
-
-import java.util.List;
 
 @Slf4j // Cung cấp logger để ghi lại log trong quá trình chạy.
 @Service // Annotate class là một service trong Spring.

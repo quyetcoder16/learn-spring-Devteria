@@ -1,9 +1,10 @@
 package quyet.learn.spring.validator;
 
 // Định nghĩa annotation tùy chỉnh để ràng buộc (constraint) việc kiểm tra ngày sinh (dob - date of birth).
-@java.lang.annotation.Target({ java.lang.annotation.ElementType.FIELD }) // Áp dụng cho các trường (field) của class.
-@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME) // Annotation tồn tại ở thời điểm runtime để sử dụng cho xác thực.
-@jakarta.validation.Constraint(validatedBy = { DobValidator.class }) // Xác định validator được sử dụng là DobValidator.
+@java.lang.annotation.Target({java.lang.annotation.ElementType.FIELD}) // Áp dụng cho các trường (field) của class.
+@java.lang.annotation.Retention(
+        java.lang.annotation.RetentionPolicy.RUNTIME) // Annotation tồn tại ở thời điểm runtime để sử dụng cho xác thực.
+@jakarta.validation.Constraint(validatedBy = {DobValidator.class}) // Xác định validator được sử dụng là DobValidator.
 public @interface DobConstraint {
 
     /**

@@ -1,17 +1,20 @@
 // Lớp này là một `AuthenticationEntryPoint` tùy chỉnh để xử lý các trường hợp xác thực JWT thất bại.
 package quyet.learn.spring.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper; // Thư viện để chuyển đổi đối tượng Java sang JSON.
-import jakarta.servlet.ServletException; // Ngoại lệ của Java Servlet API.
-import jakarta.servlet.http.HttpServletRequest; // Đối tượng đại diện cho yêu cầu HTTP.
-import jakarta.servlet.http.HttpServletResponse; // Đối tượng đại diện cho phản hồi HTTP.
-import org.springframework.http.MediaType; // Định nghĩa các kiểu media như JSON, XML.
-import org.springframework.security.core.AuthenticationException; // Ngoại lệ khi xác thực thất bại.
-import org.springframework.security.web.AuthenticationEntryPoint; // Giao diện xử lý xác thực thất bại.
-import quyet.learn.spring.dto.response.ApiResponse; // Định nghĩa chuẩn của API response.
-import quyet.learn.spring.exception.ErrorCode; // Liệt kê các mã lỗi tùy chỉnh của hệ thống.
+import java.io.IOException;
 
-import java.io.IOException; // Ngoại lệ xử lý I/O.
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import quyet.learn.spring.dto.response.ApiResponse;
+import quyet.learn.spring.exception.ErrorCode;
 
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
@@ -23,7 +26,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
      * @param authException Ngoại lệ xác thực JWT, cung cấp thông tin về lỗi.
      */
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+    public void commence(
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
+            throws IOException, ServletException {
         // Lấy mã lỗi tùy chỉnh cho trường hợp xác thực thất bại.
         ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
 

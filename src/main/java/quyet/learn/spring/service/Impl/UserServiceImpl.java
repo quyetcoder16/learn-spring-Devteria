@@ -1,14 +1,18 @@
 package quyet.learn.spring.service.Impl;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashSet;
+import java.util.List;
+
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
 import quyet.learn.spring.dto.response.UserResponse;
@@ -20,9 +24,6 @@ import quyet.learn.spring.mapper.UserMapper;
 import quyet.learn.spring.resporitory.RoleRespository;
 import quyet.learn.spring.resporitory.UserRespository;
 import quyet.learn.spring.service.UserService;
-
-import java.util.HashSet;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor // Tự động tạo constructor chứa các trường được đánh dấu là `final`.
@@ -118,8 +119,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getUser(String userId) {
         log.info("In method get user by Id"); // Ghi log khi gọi phương thức.
-        return userMapper.toUserResponse(userRespository.findById(userId).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED))); // Nếu không tìm thấy, ném ngoại lệ.
+        return userMapper.toUserResponse(userRespository
+                .findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED))); // Nếu không tìm thấy, ném ngoại lệ.
     }
 
     /**
@@ -152,8 +154,9 @@ public class UserServiceImpl implements UserService {
         System.out.println("======> subject: " + name); // name = subject in token
 
         // Tìm người dùng trong cơ sở dữ liệu theo username.
-        Users user = userRespository.findByUsername(name).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED)); // Nếu không tìm thấy, ném ngoại lệ.
+        Users user = userRespository
+                .findByUsername(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED)); // Nếu không tìm thấy, ném ngoại lệ.
 
         // Trả về thông tin của người dùng.
         return userMapper.toUserResponse(user);

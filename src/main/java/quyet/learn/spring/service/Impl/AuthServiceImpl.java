@@ -1,21 +1,30 @@
 package quyet.learn.spring.service.Impl;
 
-import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.StringJoiner;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 import quyet.learn.spring.dto.request.auth.AuthenticationRequest;
 import quyet.learn.spring.dto.request.auth.IntrospectRequest;
 import quyet.learn.spring.dto.request.auth.LogoutRequest;
@@ -30,13 +39,6 @@ import quyet.learn.spring.resporitory.InvalidatedTokenRepository;
 import quyet.learn.spring.resporitory.UserRespository;
 import quyet.learn.spring.service.AuthService;
 
-import java.text.ParseException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.StringJoiner;
-import java.util.UUID;
-
 /**
  * AuthServiceImpl: Triển khai AuthService, chịu trách nhiệm xử lý xác thực người dùng và token JWT.
  */
@@ -48,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UserRespository userRespository; // Repository để truy vấn thông tin người dùng từ cơ sở dữ liệu.
+
     InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal // Không cần final vì giá trị được inject từ @Value.
@@ -71,9 +74,11 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
         // Tìm người dùng theo username từ cơ sở dữ liệu.
-        var user = userRespository.findByUsername(authenticationRequest.getUsername()).orElseThrow(() -> {
-            throw new AppException(ErrorCode.USER_NOT_EXISTED); // Ném lỗi nếu không tìm thấy người dùng.
-        });
+        var user = userRespository
+                .findByUsername(authenticationRequest.getUsername())
+                .orElseThrow(() -> {
+                    throw new AppException(ErrorCode.USER_NOT_EXISTED); // Ném lỗi nếu không tìm thấy người dùng.
+                });
 
         // Kiểm tra mật khẩu đã được mã hóa bằng BCrypt.
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10); // Sử dụng BCrypt với độ mạnh 10.
@@ -86,10 +91,7 @@ public class AuthServiceImpl implements AuthService {
         var token = gennerateToken(user);
 
         // Trả về phản hồi chứa token và trạng thái xác thực.
-        return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(true)
-                .build();
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
     /**
@@ -110,9 +112,7 @@ public class AuthServiceImpl implements AuthService {
         } catch (AppException e) {
             isValid = false;
         }
-        return IntrospectResponse.builder()
-                .valid(isValid)
-                .build();
+        return IntrospectResponse.builder().valid(isValid).build();
     }
 
     /**
@@ -131,10 +131,8 @@ public class AuthServiceImpl implements AuthService {
             Date expiryTime = signedToken.getJWTClaimsSet().getExpirationTime(); // Lấy thời gian hết hạn.
 
             // Tạo đối tượng InvalidatedToken để lưu token đã vô hiệu hóa.
-            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                    .id(jit)
-                    .expiryTime(expiryTime)
-                    .build();
+            InvalidatedToken invalidatedToken =
+                    InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
 
             // Lưu token vào cơ sở dữ liệu.
             invalidatedTokenRepository.save(invalidatedToken);
@@ -160,27 +158,21 @@ public class AuthServiceImpl implements AuthService {
 
         // Kiểm tra nếu token đã hết hạn thì không thêm vào InvalidatedToken
         if (expiryTime.after(new Date())) {
-            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                    .id(jit)
-                    .expiryTime(expiryTime)
-                    .build();
+            InvalidatedToken invalidatedToken =
+                    InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
             invalidatedTokenRepository.save(invalidatedToken);
         }
 
         // Lấy thông tin người dùng từ token.
         var username = signedJWT.getJWTClaimsSet().getSubject();
-        var user = userRespository.findByUsername(username).orElseThrow(
-                () -> new AppException(ErrorCode.UNAUTHENTICATED)
-        );
+        var user =
+                userRespository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         // Tạo token mới.
         var token = gennerateToken(user);
 
         // Trả về phản hồi với token mới.
-        return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(true)
-                .build();
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
     /**
@@ -197,8 +189,12 @@ public class AuthServiceImpl implements AuthService {
 
         // Xác định thời gian hết hạn của token dựa trên isRefresh.
         Date expiration = isRefresh
-                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime().toInstant()
-                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli())
+                ? new Date(signedJWT
+                        .getJWTClaimsSet()
+                        .getIssueTime()
+                        .toInstant()
+                        .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                        .toEpochMilli())
                 : signedJWT.getJWTClaimsSet().getExpirationTime();
 
         // Kiểm tra chữ ký và hạn token.
@@ -231,8 +227,10 @@ public class AuthServiceImpl implements AuthService {
                 .issuer("quyet.learn.spring") // Định danh của hệ thống phát hành token.
                 .issueTime(new Date()) // Thời gian phát hành token.
                 .expirationTime(new Date(
-                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli() // Token hết hạn sau 1 giờ.
-                ))
+                        Instant.now()
+                                .plus(VALID_DURATION, ChronoUnit.SECONDS)
+                                .toEpochMilli() // Token hết hạn sau 1 giờ.
+                        ))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId()) // Thêm thông tin bổ sung userId.
                 .claim("scope", buildScope(user)) // Thêm thông tin quyền hạn (scope).

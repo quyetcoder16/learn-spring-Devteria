@@ -1,16 +1,17 @@
 package quyet.learn.spring.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.*;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
 import quyet.learn.spring.dto.request.permission.PermissionRequest;
 import quyet.learn.spring.dto.response.ApiResponse;
 import quyet.learn.spring.dto.response.permission.PermissionResponse;
 import quyet.learn.spring.service.PermissionService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/permissions")
@@ -37,8 +38,6 @@ public class PermissionController {
     @DeleteMapping("/{permission}")
     ApiResponse<Void> deletePermission(@PathVariable("permission") String permission) {
         permissionService.delete(permission);
-        return ApiResponse.<Void>builder()
-                .build();
+        return ApiResponse.<Void>builder().build();
     }
-
 }

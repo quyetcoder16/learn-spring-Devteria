@@ -1,10 +1,10 @@
 package quyet.learn.spring.dto.response.role;
 
+import java.util.Set;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import quyet.learn.spring.dto.response.permission.PermissionResponse;
-
-import java.util.Set;
 
 @Data
 @AllArgsConstructor

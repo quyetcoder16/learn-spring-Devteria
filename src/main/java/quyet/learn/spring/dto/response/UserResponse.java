@@ -1,12 +1,11 @@
 package quyet.learn.spring.dto.response;
 
+import java.time.LocalDate;
+import java.util.Set;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import quyet.learn.spring.dto.response.role.RoleResponse;
-import quyet.learn.spring.entity.Role;
-
-import java.time.LocalDate;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor

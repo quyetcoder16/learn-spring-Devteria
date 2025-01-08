@@ -1,11 +1,11 @@
 package quyet.learn.spring.entity;
 
+import java.util.Set;
+
 import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "role")

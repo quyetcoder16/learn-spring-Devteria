@@ -1,8 +1,7 @@
 package quyet.learn.spring.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -16,11 +15,14 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import lombok.extern.slf4j.Slf4j;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.response.UserResponse;
 import quyet.learn.spring.service.UserService;
-
-import java.time.LocalDate;
 
 // Chú thích: @SpringBootTest dùng để chạy toàn bộ ngữ cảnh Spring trong môi trường kiểm thử
 @SpringBootTest
@@ -88,8 +90,10 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON_VALUE) // Đặt Content-Type là JSON
                         .content(content)) // Gửi nội dung JSON trong body
                 .andExpect(MockMvcResultMatchers.status().isOk()) // Kiểm tra HTTP status code là 200 OK
-                .andExpect(MockMvcResultMatchers.jsonPath("code").value(1000)) // Kiểm tra trường "code" trong JSON response
-                .andExpect(MockMvcResultMatchers.jsonPath("data.id").value("6203deb0")); // Kiểm tra "id" của dữ liệu trả về
+                .andExpect(MockMvcResultMatchers.jsonPath("code")
+                        .value(1000)) // Kiểm tra trường "code" trong JSON response
+                .andExpect(MockMvcResultMatchers.jsonPath("data.id")
+                        .value("6203deb0")); // Kiểm tra "id" của dữ liệu trả về
     }
 
     // Test case kiểm tra tạo người dùng với dữ liệu không hợp lệ
@@ -109,8 +113,11 @@ public class UserControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/users") // Gửi HTTP POST request
                         .contentType(MediaType.APPLICATION_JSON_VALUE) // Đặt Content-Type là JSON
                         .content(content)) // Gửi nội dung JSON trong body
-                .andExpect(MockMvcResultMatchers.status().isBadRequest()) // Kiểm tra HTTP status code là 400 Bad Request
-                .andExpect(MockMvcResultMatchers.jsonPath("code").value(1004)) // Kiểm tra trường "code" trong JSON response
-                .andExpect(MockMvcResultMatchers.jsonPath("message").value("Username Must be at least 5 characters!")); // Kiểm tra thông báo lỗi
+                .andExpect(
+                        MockMvcResultMatchers.status().isBadRequest()) // Kiểm tra HTTP status code là 400 Bad Request
+                .andExpect(MockMvcResultMatchers.jsonPath("code")
+                        .value(1004)) // Kiểm tra trường "code" trong JSON response
+                .andExpect(MockMvcResultMatchers.jsonPath("message")
+                        .value("Username Must be at least 5 characters!")); // Kiểm tra thông báo lỗi
     }
 }

@@ -1,5 +1,8 @@
 package quyet.learn.spring.service;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,15 +13,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
+
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.response.UserResponse;
 import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.exception.AppException;
 import quyet.learn.spring.exception.ErrorCode;
 import quyet.learn.spring.resporitory.UserRespository;
-
-import java.time.LocalDate;
-import java.util.Optional;
 
 // Chú thích: @SpringBootTest để chạy ngữ cảnh Spring trong môi trường kiểm thử
 @SpringBootTest
@@ -73,8 +74,10 @@ public class UserServiceTest {
     @Test
     void createUser_validRequest_success() {
         // given: giả lập hành vi của repository
-        Mockito.when(userRespository.existsByUsername(ArgumentMatchers.anyString())).thenReturn(false); // Người dùng chưa tồn tại
-        Mockito.when(userRespository.save(ArgumentMatchers.any())).thenReturn(user); // Lưu người dùng trả về đối tượng `user`
+        Mockito.when(userRespository.existsByUsername(ArgumentMatchers.anyString()))
+                .thenReturn(false); // Người dùng chưa tồn tại
+        Mockito.when(userRespository.save(ArgumentMatchers.any()))
+                .thenReturn(user); // Lưu người dùng trả về đối tượng `user`
 
         // when: gọi phương thức cần kiểm tra
         var result = userService.createUser(userCreationRequest);
@@ -88,20 +91,24 @@ public class UserServiceTest {
     @Test
     void createUser_userExisted_fail() {
         // given: giả lập rằng username đã tồn tại trong cơ sở dữ liệu
-        Mockito.when(userRespository.existsByUsername(ArgumentMatchers.anyString())).thenReturn(true);
+        Mockito.when(userRespository.existsByUsername(ArgumentMatchers.anyString()))
+                .thenReturn(true);
 
         // when, then: gọi phương thức và kiểm tra ngoại lệ được ném ra
-        var exception = Assertions.assertThrowsExactly(AppException.class, () -> userService.createUser(userCreationRequest));
+        var exception =
+                Assertions.assertThrowsExactly(AppException.class, () -> userService.createUser(userCreationRequest));
 
         // Kiểm tra thông báo lỗi và mã lỗi
         Assertions.assertEquals(exception.getMessage(), ErrorCode.USER_EXISTED.getErrorMsg()); // Kiểm tra thông báo lỗi
-        Assertions.assertEquals(exception.getErrorCode().getErrorCode(), ErrorCode.USER_EXISTED.getErrorCode()); // Kiểm tra mã lỗi
+        Assertions.assertEquals(
+                exception.getErrorCode().getErrorCode(), ErrorCode.USER_EXISTED.getErrorCode()); // Kiểm tra mã lỗi
     }
 
     @Test
     @WithMockUser(username = "jon")
     void getMyInfo_valid_success() {
-        Mockito.when(userRespository.findByUsername(ArgumentMatchers.anyString())).thenReturn(Optional.of(user));
+        Mockito.when(userRespository.findByUsername(ArgumentMatchers.anyString()))
+                .thenReturn(Optional.of(user));
 
         var response = userService.getMyÌnfo();
         Assertions.assertEquals(userResponse.getId(), response.getId());
@@ -112,10 +119,10 @@ public class UserServiceTest {
     @Test
     @WithMockUser(username = "jon")
     void getMyInfo_userNotFound_error() {
-        Mockito.when(userRespository.findByUsername(ArgumentMatchers.anyString())).thenReturn(Optional.ofNullable(null));
-//        when
+        Mockito.when(userRespository.findByUsername(ArgumentMatchers.anyString()))
+                .thenReturn(Optional.ofNullable(null));
+        //        when
         var exception = Assertions.assertThrowsExactly(AppException.class, () -> userService.getMyÌnfo());
         Assertions.assertEquals(exception.getErrorCode().getErrorCode(), ErrorCode.USER_NOT_EXISTED.getErrorCode());
     }
-
 }
