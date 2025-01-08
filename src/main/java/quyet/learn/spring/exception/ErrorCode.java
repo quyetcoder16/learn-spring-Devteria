@@ -1,8 +1,8 @@
 package quyet.learn.spring.exception;
 
-import lombok.Data;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
+
+import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
@@ -12,9 +12,9 @@ public enum ErrorCode {
     USER_NOT_EXISTED(1003, "User Not Existed!", HttpStatus.NOT_FOUND),
     USERNAME_INVALID(1004, "Username Must be at least {min} characters!", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1005, "Password Must be at least {min} characters!", HttpStatus.BAD_REQUEST),
-    UNAUTHENTICATED(1006, "Unauthenticated Error!",HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1007, "you do not have permission!",HttpStatus.FORBIDDEN),
-    INVALID_DOB(1008, "your age must be at least {min}",HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED(1006, "Unauthenticated Error!", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(1007, "you do not have permission!", HttpStatus.FORBIDDEN),
+    INVALID_DOB(1008, "your age must be at least {min}", HttpStatus.BAD_REQUEST),
     ;
     private int errorCode;
     private String errorMsg;
@@ -25,6 +25,4 @@ public enum ErrorCode {
         this.errorMsg = errorMsg;
         this.httpStatus = httpStatus;
     }
-
-
 }

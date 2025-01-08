@@ -1,6 +1,9 @@
 package quyet.learn.spring.configuration;
 
-import com.nimbusds.jose.JOSEException;
+import java.text.ParseException;
+import java.util.Objects;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -9,12 +12,11 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
+
+import com.nimbusds.jose.JOSEException;
+
 import quyet.learn.spring.dto.request.auth.IntrospectRequest;
 import quyet.learn.spring.service.AuthService;
-
-import javax.crypto.spec.SecretKeySpec;
-import java.text.ParseException;
-import java.util.Objects;
 
 /**
  * CustomJwtDecoder là một lớp tùy chỉnh dùng để giải mã (decode) và xác minh token JWT.
@@ -49,10 +51,8 @@ public class CustomJwtDecoder implements JwtDecoder {
                     .token(token) // Gửi token đến endpoint introspect để kiểm tra tính hợp lệ
                     .build());
 
-
             // Nếu máy chủ trả về không hợp lệ, ném ngoại lệ JwtException
-            if (!response.isValid())
-                throw new JwtException("Token invalid");
+            if (!response.isValid()) throw new JwtException("Token invalid");
         } catch (JOSEException | ParseException e) {
             // Xử lý các lỗi liên quan đến JWT hoặc parse dữ liệu
             throw new JwtException(e.getMessage());
@@ -64,15 +64,12 @@ public class CustomJwtDecoder implements JwtDecoder {
             SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS256");
 
             // Khởi tạo NimbusJwtDecoder với secret key và thuật toán ký HS256
-            nimbusJwtDecoder = NimbusJwtDecoder
-                    .withSecretKey(secretKeySpec)
+            nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec)
                     .macAlgorithm(MacAlgorithm.HS256) // Xác định thuật toán MAC là HS256
                     .build();
         }
 
-
         // Bước 3: Giải mã token bằng NimbusJwtDecoder
         return nimbusJwtDecoder.decode(token);
-
     }
 }

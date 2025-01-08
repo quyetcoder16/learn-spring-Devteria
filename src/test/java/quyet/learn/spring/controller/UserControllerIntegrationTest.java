@@ -1,8 +1,7 @@
 package quyet.learn.spring.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +16,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import lombok.extern.slf4j.Slf4j;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.response.UserResponse;
-
-import java.time.LocalDate;
 
 /**
  * Tích hợp kiểm thử cho UserController sử dụng Testcontainers.
@@ -95,10 +97,14 @@ public class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON_VALUE) // Đặt Content-Type là JSON.
                         .content(content)) // Gửi nội dung JSON trong body của request.
                 .andExpect(MockMvcResultMatchers.status().isOk()) // Kiểm tra HTTP status code là 200 OK.
-                .andExpect(MockMvcResultMatchers.jsonPath("code").value(1000)) // Kiểm tra trường "code" trong JSON response.
-                .andExpect(MockMvcResultMatchers.jsonPath("data.username").value(userResponse.getUsername())) // Kiểm tra username.
-                .andExpect(MockMvcResultMatchers.jsonPath("data.firstName").value(userResponse.getFirstName())) // Kiểm tra firstName.
-                .andExpect(MockMvcResultMatchers.jsonPath("data.lastName").value(userResponse.getLastName())); // Kiểm tra lastName.
+                .andExpect(MockMvcResultMatchers.jsonPath("code")
+                        .value(1000)) // Kiểm tra trường "code" trong JSON response.
+                .andExpect(MockMvcResultMatchers.jsonPath("data.username")
+                        .value(userResponse.getUsername())) // Kiểm tra username.
+                .andExpect(MockMvcResultMatchers.jsonPath("data.firstName")
+                        .value(userResponse.getFirstName())) // Kiểm tra firstName.
+                .andExpect(MockMvcResultMatchers.jsonPath("data.lastName")
+                        .value(userResponse.getLastName())); // Kiểm tra lastName.
 
         // Ghi log nội dung phản hồi từ phía server.
         log.info("result: {}", response.andReturn().getResponse().getContentAsString());

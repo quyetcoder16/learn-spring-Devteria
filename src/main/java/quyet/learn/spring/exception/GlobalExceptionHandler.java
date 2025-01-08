@@ -1,18 +1,20 @@
 package quyet.learn.spring.exception;
 
 // Import các lớp và annotation cần thiết
+import java.util.Map;
+import java.util.Objects;
+
 import jakarta.validation.ConstraintViolation;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import quyet.learn.spring.dto.response.ApiResponse;
 
-import java.util.Map;
-import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import quyet.learn.spring.dto.response.ApiResponse;
 
 // Sử dụng @Slf4j để tự động tạo logger
 @Slf4j
@@ -35,9 +37,7 @@ public class GlobalExceptionHandler {
         apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getErrorCode());
 
         // Trả về phản hồi với mã HTTP 500 (INTERNAL_SERVER_ERROR)
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(apiResponse);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
     }
 
     // Xử lý ngoại lệ tùy chỉnh AppException
@@ -52,9 +52,7 @@ public class GlobalExceptionHandler {
         apiResponse.setCode(errorCode.getErrorCode());
 
         // Trả về phản hồi với mã HTTP tương ứng từ ErrorCode
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(apiResponse);
+        return ResponseEntity.status(errorCode.getHttpStatus()).body(apiResponse);
     }
 
     // Xử lý ngoại lệ khi người dùng bị từ chối truy cập (AccessDeniedException)
@@ -64,8 +62,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
 
         // Tạo phản hồi API
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
+        return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(ApiResponse.builder()
                         .code(errorCode.getErrorCode())
                         .message(errorCode.getErrorMsg())
@@ -87,10 +84,8 @@ public class GlobalExceptionHandler {
             errorCode = ErrorCode.valueOf(enumKey);
 
             // Lấy thông tin chi tiết từ ConstraintViolation
-            var constraintViolation = exception.getBindingResult()
-                    .getAllErrors()
-                    .get(0)
-                    .unwrap(ConstraintViolation.class);
+            var constraintViolation =
+                    exception.getBindingResult().getAllErrors().get(0).unwrap(ConstraintViolation.class);
 
             // Trích xuất các attributes của constraint (nếu có)
             attributes = constraintViolation.getConstraintDescriptor().getAttributes();
@@ -102,13 +97,13 @@ public class GlobalExceptionHandler {
         // Tạo phản hồi API với thông điệp lỗi được xử lý (nếu có attributes)
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setMessage(
-                Objects.nonNull(attributes) ? mapAttribute(errorCode.getErrorMsg(), attributes)
+                Objects.nonNull(attributes)
+                        ? mapAttribute(errorCode.getErrorMsg(), attributes)
                         : errorCode.getErrorMsg());
         apiResponse.setCode(errorCode.getErrorCode());
 
         // Trả về phản hồi với mã HTTP 400 (BAD_REQUEST)
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(apiResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
     }
 
     // Phương thức thay thế các giá trị tham số trong thông điệp lỗi

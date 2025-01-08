@@ -1,20 +1,20 @@
 package quyet.learn.spring.service.Impl;
 
+import java.util.HashSet;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import quyet.learn.spring.dto.request.role.RoleRequest;
 import quyet.learn.spring.dto.response.role.RoleResponse;
 import quyet.learn.spring.mapper.RoleMapper;
 import quyet.learn.spring.resporitory.PermissionRespository;
 import quyet.learn.spring.resporitory.RoleRespository;
 import quyet.learn.spring.service.RoleService;
-
-import java.util.HashSet;
-import java.util.List;
-
 
 @Slf4j // Cung cấp logger để ghi lại log trong quá trình chạy.
 @Service // Annotate class là một service trong Spring.
@@ -36,9 +36,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public List<RoleResponse> getAllRoles() {
-        return roleRespository.findAll()
-                .stream()
-                .map(roleMapper::toRoleResponse).toList();
+        return roleRespository.findAll().stream()
+                .map(roleMapper::toRoleResponse)
+                .toList();
     }
 
     @Override

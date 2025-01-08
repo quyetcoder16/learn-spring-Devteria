@@ -1,19 +1,19 @@
 package quyet.learn.spring.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import lombok.extern.slf4j.Slf4j;
 import quyet.learn.spring.dto.request.user.UserCreationRequest;
 import quyet.learn.spring.dto.request.user.UserUpdateRequest;
 import quyet.learn.spring.dto.response.ApiResponse;
 import quyet.learn.spring.dto.response.UserResponse;
-import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.service.UserService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -30,7 +30,6 @@ public class UserController {
                 .build();
     }
 
-
     @GetMapping
     ApiResponse<List<UserResponse>> getUsers() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -43,9 +42,7 @@ public class UserController {
 
     @GetMapping("/myInfo")
     ApiResponse<UserResponse> getUser() {
-        return ApiResponse.<UserResponse>builder()
-                .data(userService.getMyÌnfo())
-                .build();
+        return ApiResponse.<UserResponse>builder().data(userService.getMyÌnfo()).build();
     }
 
     @GetMapping("/{userId}")

@@ -1,20 +1,20 @@
 package quyet.learn.spring.configuration;
 
+import java.util.HashSet;
+
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import quyet.learn.spring.entity.Users;
 import quyet.learn.spring.enums.Role;
 import quyet.learn.spring.resporitory.UserRespository;
-
-import java.util.HashSet;
 
 @Slf4j
 @Configuration
@@ -28,8 +28,7 @@ public class ApplicationInitConfig {
     @ConditionalOnProperty(
             prefix = "spring",
             value = "datasource.driverClassName",
-            havingValue = "com.mysql.cj.jdbc.Driver"
-    )
+            havingValue = "com.mysql.cj.jdbc.Driver")
     ApplicationRunner applicationRunner(UserRespository userRespository) {
         return args -> {
             if (userRespository.findByUsername("admin").isEmpty()) {
@@ -37,7 +36,7 @@ public class ApplicationInitConfig {
                 roles.add(Role.ADMIN.name());
                 Users user = Users.builder()
                         .username("admin")
-                       // .roles(roles)
+                        // .roles(roles)
                         .password(passwordEncoder.encode("admin"))
                         .build();
 
