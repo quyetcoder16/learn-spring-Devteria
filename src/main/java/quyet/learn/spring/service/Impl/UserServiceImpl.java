@@ -3,6 +3,8 @@ package quyet.learn.spring.service.Impl;
 import java.util.HashSet;
 import java.util.List;
 
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,10 +52,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(UserCreationRequest userRequest) {
         log.info("Service : Creating user: ");
-        // Kiểm tra xem username đã tồn tại trong cơ sở dữ liệu chưa.
-        if (userRespository.existsByUsername(userRequest.getUsername())) {
-            throw new AppException(ErrorCode.USER_EXISTED); // Nếu tồn tại, ném ngoại lệ.
-        }
+
 
         // Chuyển đổi DTO thành đối tượng Users (entity).
         Users user = userMapper.toUsers(userRequest);
@@ -65,9 +64,14 @@ public class UserServiceImpl implements UserService {
         HashSet<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
         // user.setRoles(roles);
+        try {
+            user = userRespository.save(user);
 
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
         // Lưu đối tượng người dùng vào cơ sở dữ liệu và trả về phản hồi.
-        return userMapper.toUserResponse(userRespository.save(user));
+        return userMapper.toUserResponse(user);
     }
 
     /**
