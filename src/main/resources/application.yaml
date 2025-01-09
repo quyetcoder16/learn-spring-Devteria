@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: root
-    url: jdbc:mysql://localhost:3306/spring
+    username: ${DBMS_USERNAME:root}
+    password: ${DBMS_PASSWORD:root}
+    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3306/spring}
   jpa:
     hibernate:
       ddl-auto: create
@@ -17,6 +17,6 @@ server:
     context-path: /api
 
 jwt:
-  singerKey: "6ycsb5jxe6lplzxtz9e3jvl3btrpd5kh"
+  singerKey: ${JWT_ACCESS_TOKEN_SIGNERKEY}
   valid-duration: 120 # in second
   refreshable-duration: 520 # in second
