@@ -1,6 +1,8 @@
 package quyet.learn.spring.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -13,18 +15,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
 
 @Configuration // Đánh dấu class này là class cấu hình Spring.
 @EnableWebSecurity // Kích hoạt cấu hình bảo mật Spring Security.
 @EnableMethodSecurity // Kích hoạt bảo mật phương thức, hỗ trợ @PreAuthorize và @PostAuthorize.
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class SecurityConfig {
 
-    @Autowired
-    private CustomJwtDecoder customJwtDecoder;
+    CustomJwtDecoder customJwtDecoder;
 
     // Các endpoint không yêu cầu xác thực.
-    private final String[] PUBLIC_ENDPOINTS = {
-        "/auth/token", "/auth/introspect", "/users", "/auth/logout", "/auth/refresh"
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/auth/token", "/auth/introspect", "/users", "/auth/logout", "/auth/refresh"
     };
 
     /**
@@ -44,14 +51,14 @@ public class SecurityConfig {
                                 // được phép GET /users.
                                 .anyRequest()
                                 .authenticated() // Yêu cầu xác thực cho các endpoint khác.
-                        )
+                )
                 .oauth2ResourceServer(
                         oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
                                         .decoder(customJwtDecoder) // Sử dụng jwtDecoder để giải mã JWT.
                                         .jwtAuthenticationConverter(
                                                 jwtAuthenticationConverter())) // Cấu hình ánh xạ quyền từ token.
                                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) // Xử lý lỗi xác thực JWT.
-                        )
+                )
                 .csrf(AbstractHttpConfigurer::disable); // Vô hiệu hóa CSRF (phù hợp với API REST).
 
         return httpSecurity.build(); // Trả về chuỗi filter bảo mật đã cấu hình.
@@ -72,6 +79,20 @@ public class SecurityConfig {
                 jwtGrantedAuthoritiesConverter); // Sử dụng converter để ánh xạ quyền.
 
         return jwtAuthenticationConverter;
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.addAllowedOrigin("*");
+
+
+        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
+
+        return new CorsFilter(urlBasedCorsConfigurationSource);
     }
 
     /**
