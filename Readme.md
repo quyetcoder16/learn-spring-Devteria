@@ -28,3 +28,19 @@
 
 ### Run your application in quyet-network
 `docker run --name identity-service --network quyet-network -p 8081:8081 -e DBMS_CONNECTION=jdbc:mysql://mysql_quyet:3306/spring -e DBMS_PASSWORD=root test-identity:0.0.1`
+
+## dockerhub push
+
+### Build docker image
+`docker build -t <account>/identity-service:0.9.0 .`
+
+### Push docker image to Docker Hub
+`docker image push <account>/identity-service:0.9.0`
+
+### pull image 
+`docker pull quyetcoder16/identity-service:0.9.0`
+
+### run docker image 
+`docker run --name identity-service --network quyet-network -p 8081:8081 -e DBMS_CONNECTION=jdbc:mysql://mysql_quyet:3306/spring -e DBMS_PASSWORD=root quyetcoder16/identity-service:0.9.0`
+
+
