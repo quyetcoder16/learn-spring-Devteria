@@ -3,7 +3,6 @@ package quyet.learn.spring.service.Impl;
 import java.util.HashSet;
 import java.util.List;
 
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -52,7 +51,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(UserCreationRequest userRequest) {
         log.info("Service : Creating user: ");
-
 
         // Chuyển đổi DTO thành đối tượng Users (entity).
         Users user = userMapper.toUsers(userRequest);

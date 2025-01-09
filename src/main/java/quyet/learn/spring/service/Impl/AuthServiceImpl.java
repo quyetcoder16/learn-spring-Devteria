@@ -191,11 +191,11 @@ public class AuthServiceImpl implements AuthService {
         // Xác định thời gian hết hạn của token dựa trên isRefresh.
         Date expiration = isRefresh
                 ? new Date(signedJWT
-                .getJWTClaimsSet()
-                .getIssueTime()
-                .toInstant()
-                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
-                .toEpochMilli())
+                        .getJWTClaimsSet()
+                        .getIssueTime()
+                        .toInstant()
+                        .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                        .toEpochMilli())
                 : signedJWT.getJWTClaimsSet().getExpirationTime();
 
         // Kiểm tra chữ ký và hạn token.
@@ -231,7 +231,7 @@ public class AuthServiceImpl implements AuthService {
                         Instant.now()
                                 .plus(VALID_DURATION, ChronoUnit.SECONDS)
                                 .toEpochMilli() // Token hết hạn sau 1 giờ.
-                ))
+                        ))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("userId", user.getId()) // Thêm thông tin bổ sung userId.
                 .claim("scope", buildScope(user)) // Thêm thông tin quyền hạn (scope).

@@ -17,6 +17,6 @@ server:
     context-path: /api
 
 jwt:
-  singerKey: ${JWT_ACCESS_TOKEN_SIGNERKEY}
+  singerKey: ${JWT_ACCESS_TOKEN_SIGNERKEY:"JWT_ACCESS_TOKEN_SIGNERKEY=6ycsb5jxe6lplzxtz9e3jvl3btrpd5kh"}
   valid-duration: 120 # in second
   refreshable-duration: 520 # in second

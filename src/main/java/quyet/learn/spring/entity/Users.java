@@ -21,7 +21,7 @@ public class Users {
     @Column(name = "id")
     private String id;
 
-    @Column(name = "user_name",unique = true,columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
+    @Column(name = "user_name", unique = true, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
     private String username;
 
     @Column(name = "password")

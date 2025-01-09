@@ -1,8 +1,5 @@
 package quyet.learn.spring.configuration;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,6 +16,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Configuration // Đánh dấu class này là class cấu hình Spring.
 @EnableWebSecurity // Kích hoạt cấu hình bảo mật Spring Security.
@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     // Các endpoint không yêu cầu xác thực.
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/auth/token", "/auth/introspect", "/users", "/auth/logout", "/auth/refresh"
+        "/auth/token", "/auth/introspect", "/users", "/auth/logout", "/auth/refresh"
     };
 
     /**
@@ -51,14 +51,14 @@ public class SecurityConfig {
                                 // được phép GET /users.
                                 .anyRequest()
                                 .authenticated() // Yêu cầu xác thực cho các endpoint khác.
-                )
+                        )
                 .oauth2ResourceServer(
                         oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
                                         .decoder(customJwtDecoder) // Sử dụng jwtDecoder để giải mã JWT.
                                         .jwtAuthenticationConverter(
                                                 jwtAuthenticationConverter())) // Cấu hình ánh xạ quyền từ token.
                                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint()) // Xử lý lỗi xác thực JWT.
-                )
+                        )
                 .csrf(AbstractHttpConfigurer::disable); // Vô hiệu hóa CSRF (phù hợp với API REST).
 
         return httpSecurity.build(); // Trả về chuỗi filter bảo mật đã cấu hình.
@@ -87,7 +87,6 @@ public class SecurityConfig {
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedOrigin("*");
-
 
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
